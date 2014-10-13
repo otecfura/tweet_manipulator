@@ -3,7 +3,7 @@ import 'dart:html';
 import 'package:csv/csv.dart';
 
 
-class DndFiles {
+class TwitterManipulator {
   FormElement _readForm;
   InputElement _fileInput;
   Element _dropZone;
@@ -12,7 +12,7 @@ class DndFiles {
   List<Tweet> tweets=new List<Tweet>();
 
 
-  DndFiles() {
+  TwitterManipulator() {
     _output = document.querySelector('#list');
     _readForm = document.querySelector('#read');
     _fileInput = document.querySelector('#files');
@@ -76,10 +76,15 @@ class Tweet{
   
   Tweet(String tweet){
     this.tweet=tweet;
-    isReply=tweet[0]=="@";
+    isReply=itIsReply(tweet);
   }
+  
+  bool itIsReply(String tweet){
+    return tweet[0]=="@";
+  }
+  
 }
 
 void main() {
-  new DndFiles();
+  new TwitterManipulator();
 }
