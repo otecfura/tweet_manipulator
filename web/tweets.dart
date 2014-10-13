@@ -55,10 +55,17 @@ class TwitterManipulator {
       tweets.add(new Tweet(lst[5]));
       if(lst!=res.first){
         var LiTweet=new LIElement();
+        LiTweet.draggable=true;
+        LiTweet.onDragEnd.listen((event) => tweetSelect(LiTweet));
         LiTweet.text=lst[5];
         listOfNonSelected.append(LiTweet);
       }
     }
+  }
+  
+  void tweetSelect(var LiTweet){
+    listOfNonSelected.children.remove(LiTweet);
+    listOfSelected.append(LiTweet);
   }
   
   }

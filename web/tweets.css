@@ -11,6 +11,7 @@ body {
   font-weight: normal;
   line-height: 1.2em;
   margin: 15px;
+  overflow:scroll
 }
 
 output {
@@ -70,15 +71,13 @@ output {
 }
 
 #to-do-list-selected{
-  padding:0px;
-  margin:0px;
-  list-style-position:inside;
+  width:40%;
+  float:left;
 }
 
 #to-do-list-nonselected{
-  padding:0px;
-  margin:0px;
-  list-style-position:inside;
+  width:40%;
+  float:left;
 }
 
 #to-do-list-selected li{
