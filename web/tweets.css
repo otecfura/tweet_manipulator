@@ -69,13 +69,19 @@ output {
   margin: 10px 5px 0 0;
 }
 
-#to-do-list{
+#to-do-list-selected{
   padding:0px;
   margin:0px;
   list-style-position:inside;
 }
 
-#to-do-list li{
+#to-do-list-nonselected{
+  padding:0px;
+  margin:0px;
+  list-style-position:inside;
+}
+
+#to-do-list-selected li{
   padding: 5px 0px 5px 5px;
   border-bottom: 1px dotted Silver;
 }

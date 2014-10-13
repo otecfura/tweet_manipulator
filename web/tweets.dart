@@ -11,8 +11,8 @@ class TwitterManipulator {
 
 
   TwitterManipulator() {
-    listOfNonSelected = document.querySelector('#to-do-list');
-
+    listOfNonSelected = document.querySelector('#to-do-list-nonselected');
+    listOfSelected = document.querySelector('#to-do-list-selected');
     _dropZone = document.querySelector('#drop-zone');
     _dropZone.onDragOver.listen(_onDragOver);
     _dropZone.onDragEnter.listen((e) => _dropZone.classes.add('hover'));
@@ -51,12 +51,13 @@ class TwitterManipulator {
         textDelimiter: '"',
         textEndDelimiter: '"',
         eol: '\n');
-    print(res.length);
     for(List lst in res){
-      //tweets.add(new Tweet(lst[5]));
-      var LiTweet=new LIElement();
-      LiTweet.text=lst[5];
-      listOfNonSelected.append(LiTweet);
+      tweets.add(new Tweet(lst[5]));
+      if(lst!=res.first){
+        var LiTweet=new LIElement();
+        LiTweet.text=lst[5];
+        listOfNonSelected.append(LiTweet);
+      }
     }
   }
   
@@ -65,10 +66,15 @@ class TwitterManipulator {
 class Tweet{
   String tweet;
   bool isReply;
+  bool isSelected;
   
   Tweet(String tweet){
     this.tweet=tweet;
     isReply=itIsReply(tweet);
+  }
+  
+  void setIsSelected(bool isSelected){
+    this.isSelected=isSelected;
   }
   
   bool itIsReply(String tweet){
