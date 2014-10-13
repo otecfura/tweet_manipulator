@@ -1,9 +1,3 @@
-<!--
-  Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
-  for details. All rights reserved. Use of this source code is governed by a
-  BSD-style license that can be found in the LICENSE file.
--->
-
 <html>
   <head>
     <meta charset="utf-8">
@@ -11,12 +5,9 @@
     <link rel="stylesheet" href="tweets.css">
   </head>
   <body>
-    <h3>Twitter helper</h3>
-    <form id="read">
-      <input type="file" id="files" name="files[]" multiple />
-    </form>
     <div id="drop-zone">Drop Twitter csv file here</div>
-    <output id="list"></output>
+    <ul id="to-do-list" >
+    </ul>
     <script type="application/dart" src="tweets.dart"></script>
     <script src="packages/chrome/bootstrap.js" defer></script>
   </body>

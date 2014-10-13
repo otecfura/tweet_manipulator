@@ -68,3 +68,14 @@ output {
   height: 75px;
   margin: 10px 5px 0 0;
 }
+
+#to-do-list{
+  padding:0px;
+  margin:0px;
+  list-style-position:inside;
+}
+
+#to-do-list li{
+  padding: 5px 0px 5px 5px;
+  border-bottom: 1px dotted Silver;
+}

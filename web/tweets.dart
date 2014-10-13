@@ -2,21 +2,16 @@ import 'dart:convert' show HtmlEscape;
 import 'dart:html';
 import 'package:csv/csv.dart';
 
-
 class TwitterManipulator {
-  FormElement _readForm;
-  InputElement _fileInput;
+  UListElement listOfNonSelected;
+  UListElement listOfSelected;
   Element _dropZone;
-  OutputElement _output;
   HtmlEscape sanitizer = new HtmlEscape();
   List<Tweet> tweets=new List<Tweet>();
 
 
   TwitterManipulator() {
-    _output = document.querySelector('#list');
-    _readForm = document.querySelector('#read');
-    _fileInput = document.querySelector('#files');
-    _fileInput.onChange.listen((e) => _onFileInputChange());
+    listOfNonSelected = document.querySelector('#to-do-list');
 
     _dropZone = document.querySelector('#drop-zone');
     _dropZone.onDragOver.listen(_onDragOver);
@@ -35,12 +30,7 @@ class TwitterManipulator {
     event.stopPropagation();
     event.preventDefault();
     _dropZone.classes.remove('hover');
-    _readForm.reset();
     _onFilesSelected(event.dataTransfer.files);
-  }
-
-  void _onFileInputChange() {
-    _onFilesSelected(_fileInput.files);
   }
 
   void _onFilesSelected(List<File> files) {
@@ -63,8 +53,10 @@ class TwitterManipulator {
         eol: '\n');
     print(res.length);
     for(List lst in res){
-      tweets.add(new Tweet(lst[5]));
-      print(tweets.last.isReply);
+      //tweets.add(new Tweet(lst[5]));
+      var LiTweet=new LIElement();
+      LiTweet.text=lst[5];
+      listOfNonSelected.append(LiTweet);
     }
   }
   
