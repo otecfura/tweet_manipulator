@@ -3,8 +3,12 @@ import 'dart:html';
 import 'package:csv/csv.dart';
 
 class TwitterManipulator {
+  List<List> listOfTweets=null;
+  
   UListElement listOfNonSelected;
   UListElement listOfSelected;
+  bool checkReply;
+  bool checkRetweets;
   Element _dropZone;
   HtmlEscape sanitizer = new HtmlEscape();
   List<Tweet> tweets=new List<Tweet>();
@@ -13,6 +17,16 @@ class TwitterManipulator {
   TwitterManipulator() {
     listOfNonSelected = document.querySelector('#to-do-list-nonselected');
     listOfSelected = document.querySelector('#to-do-list-selected');
+    document.querySelector("#reply").onChange.listen((Event e) {
+      bool checked = (e.currentTarget as InputElement).checked;
+      checkReply=checked;
+      fillWithData();
+    });
+    document.querySelector("#retweets").onChange.listen((Event e) {
+          bool checked = (e.currentTarget as InputElement).checked;
+          checkRetweets=checked;
+          fillWithData();
+        });
     _dropZone = document.querySelector('#drop-zone');
     _dropZone.onDragOver.listen(_onDragOver);
     _dropZone.onDragEnter.listen((e) => _dropZone.classes.add('hover'));
@@ -46,20 +60,48 @@ class TwitterManipulator {
     }
   
   void readStringCsv(String csv){
-    List<List> res = const CsvToListConverter().convert(csv,
+    listOfTweets = const CsvToListConverter().convert(csv,
         fieldDelimiter: ',',
         textDelimiter: '"',
         textEndDelimiter: '"',
         eol: '\n');
-    for(List lst in res){
-      tweets.add(new Tweet(lst[5]));
-      if(lst!=res.first){
-        var LiTweet=new LIElement();
-        LiTweet.draggable=true;
-        LiTweet.onDragEnd.listen((event) => tweetSelect(LiTweet));
-        LiTweet.text=lst[5];
-        listOfNonSelected.append(LiTweet);
-      }
+    fillWithData();
+  }
+  
+  void fillWithData(){
+    listOfNonSelected.children.clear();
+    listOfSelected.children.clear();
+    if(listOfTweets!=null){
+    for(List lst in listOfTweets){
+          if(lst!=listOfTweets.first){
+            Tweet tweet=new Tweet(lst);
+            tweets.add(tweet);
+            var LiTweet=new LIElement();
+            LiTweet.draggable=true;
+            LiTweet.onDragEnd.listen((event) => tweetSelect(LiTweet));
+            LiTweet.text=tweet.tweet;
+            
+            if(!tweet.isRT && !tweet.isReply){
+              listOfNonSelected.append(LiTweet);
+              }
+            
+              if(tweet.isReply){
+                if(checkReply){
+                listOfNonSelected.append(LiTweet);
+              }
+            }
+              
+              if(tweet.isRT){
+            if(checkRetweets){
+                listOfNonSelected.append(LiTweet);
+              }
+            }
+            
+
+
+            
+          }
+        }
     }
   }
   
@@ -73,11 +115,13 @@ class TwitterManipulator {
 class Tweet{
   String tweet;
   bool isReply;
+  bool isRT;
   bool isSelected;
   
-  Tweet(String tweet){
-    this.tweet=tweet;
-    isReply=itIsReply(tweet);
+  Tweet(List tweet){
+    this.tweet=tweet[5];
+    isReply=itIsReply(this.tweet);
+    isRT=itIsRT(tweet);
   }
   
   void setIsSelected(bool isSelected){
@@ -87,6 +131,17 @@ class Tweet{
   bool itIsReply(String tweet){
     return tweet[0]=="@";
   }
+  
+  bool itIsRT(List tweet){
+    bool RT=false;
+    if(tweet[5].substring(0,2)=="RT"){
+      RT=true;
+    }
+    if(tweet[7]!=""){
+      RT=true;
+    }
+    return RT;
+    }
   
 }
 
