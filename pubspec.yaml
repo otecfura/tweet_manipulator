@@ -1,0 +1,7 @@
+name: Tweets
+description: A sample Chrome packaged application
+dependencies:
+  chrome: any
+  csv: ">=2.0.1 <3.0.0"
+transformers:
+- chrome
