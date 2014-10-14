@@ -92,6 +92,11 @@ class TwitterManipulator {
 
   }
     orderedWords.sort();
+    for(Word wo in orderedWords.sublist(0,100)){
+      print(wo.word);
+      print(wo.count);
+    }
+    
   }
 
   void fillWithData() {
