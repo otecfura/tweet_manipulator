@@ -12,7 +12,7 @@ class TwitterManipulator {
   Element _dropZone;
   HtmlEscape sanitizer = new HtmlEscape();
   List<Tweet> tweets = new List<Tweet>();
-
+  List<Word> orderedWords= new List<Word>();
 
   TwitterManipulator() {
     listOfNonSelected = document.querySelector('#to-do-list-nonselected');
@@ -64,9 +64,39 @@ class TwitterManipulator {
     fillWithData();
   }
 
+  void countWords() {
+    if (tweets.isNotEmpty) {
+      for (Tweet tweet in tweets) {
+        var tweetString = tweet.tweet;
+        tweetString = tweetString.toLowerCase();
+        tweetString = tweetString.replaceAll(new RegExp('[.,;!?#"]'), ' ');
+        tweetString = tweetString.replaceAll(new RegExp('\@\S+'), ' ');
+        List<String> words = tweetString.split(' ');
+        for (String word in words) {
+          Word tested=null;
+          word = word.trim();
+          bool test = orderedWords.any((m) {
+            if(m.word == word){
+              tested=m;
+            }
+            return m.word == word;
+          });
+          if(test){
+            tested.count=tested.count+1;
+          }else{
+            orderedWords.add(new Word(word));
+          }
+        }
+      }
+
+  }
+    orderedWords.sort();
+  }
+
   void fillWithData() {
     listOfNonSelected.children.clear();
     listOfSelected.children.clear();
+    tweets.clear();
     if (listOfTweets != null) {
       for (List lst in listOfTweets) {
         if (lst != listOfTweets.first) {
@@ -80,14 +110,15 @@ class TwitterManipulator {
             listOfNonSelected.append(LiTweet);
           }
           if (tweet.isReply && checkReply) {
-              listOfNonSelected.append(LiTweet);
+            listOfNonSelected.append(LiTweet);
           }
           if (tweet.isRT && checkRetweets) {
-              listOfNonSelected.append(LiTweet);
+            listOfNonSelected.append(LiTweet);
           }
         }
       }
     }
+    countWords();
   }
 
   void tweetSelect(var LiTweet) {
@@ -99,6 +130,27 @@ class TwitterManipulator {
       listOfNonSelected.append(LiTweet);
     }
   }
+}
+
+class Word{
+  String word;
+  int count;
+  
+  Word(String word) {
+    this.word = word;
+    count=1;
+  }
+  
+  int compareTo(Word other){
+    if(other.count>count){
+      return 1;
+    }
+    if(other.count<count){
+     return -1; 
+    }
+     return 0; 
+  }
+  
 }
 
 class Tweet {
