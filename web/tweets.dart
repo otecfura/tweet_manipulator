@@ -76,10 +76,11 @@ class TwitterManipulator {
           Word tested=null;
           word = word.trim();
           bool test = orderedWords.any((m) {
-            if(m.word == word){
+            bool isExists = m.word == word;
+            if(isExists){
               tested=m;
             }
-            return m.word == word;
+            return isExists;
           });
           if(test){
             tested.count=tested.count+1;
