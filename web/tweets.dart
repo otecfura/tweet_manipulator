@@ -1,9 +1,10 @@
-import 'dart:convert' show HtmlEscape;
+import 'dart:convert';
 import 'dart:html';
 import 'package:csv/csv.dart';
 
 class TwitterManipulator {
-  List<List> listOfTweets = null;
+  String TWEETS_LIST = "tweets";
+  String tweetsJson;
 
   UListElement listOfNonSelected;
   UListElement listOfSelected;
@@ -11,12 +12,15 @@ class TwitterManipulator {
   bool checkRetweets;
   Element _dropZone;
   HtmlEscape sanitizer = new HtmlEscape();
+
+  List<List> listOfTweets = null;
   List<Tweet> tweets = new List<Tweet>();
-  List<Word> orderedWords= new List<Word>();
+  List<Tweet> loadedTweets = new List<Tweet>();
 
   TwitterManipulator() {
     listOfNonSelected = document.querySelector('#to-do-list-nonselected');
     listOfSelected = document.querySelector('#to-do-list-selected');
+    _dropZone = document.querySelector('#drop-zone');
     document.querySelector("#reply").onChange.listen((Event e) {
       bool checked = (e.currentTarget as InputElement).checked;
       checkReply = checked;
@@ -27,11 +31,15 @@ class TwitterManipulator {
       checkRetweets = checked;
       fillWithData();
     });
-    _dropZone = document.querySelector('#drop-zone');
-    _dropZone.onDragOver.listen(_onDragOver);
-    _dropZone.onDragEnter.listen((e) => _dropZone.classes.add('hover'));
-    _dropZone.onDragLeave.listen((e) => _dropZone.classes.remove('hover'));
-    _dropZone.onDrop.listen(_onDrop);
+    if (!isLocalData()) {
+      _dropZone.onDragOver.listen(_onDragOver);
+      _dropZone.onDragEnter.listen((e) => _dropZone.classes.add('hover'));
+      _dropZone.onDragLeave.listen((e) => _dropZone.classes.remove('hover'));
+      _dropZone.onDrop.listen(_onDrop);
+    } else {
+      _dropZone.hidden = true;
+      loadFromLoacalStorage();
+    }
   }
 
   void _onDragOver(MouseEvent event) {
@@ -56,7 +64,7 @@ class TwitterManipulator {
     var reader = new FileReader();
     var slice = file.slice(start, end);
     reader.onLoad.listen((event) => readStringCsv(reader.result));
-    reader.readAsText(slice);
+    reader.readAsText(slice, "utf8");
   }
 
   void readStringCsv(String csv) {
@@ -64,70 +72,88 @@ class TwitterManipulator {
     fillWithData();
   }
 
-  void countWords() {
-    if (tweets.isNotEmpty) {
-      for (Tweet tweet in tweets) {
-        var tweetString = tweet.tweet;
-        tweetString = tweetString.toLowerCase();
-        tweetString = tweetString.replaceAll(new RegExp('[.,;!?#"]'), ' ');
-        tweetString = tweetString.replaceAll(new RegExp('\@\S+'), ' ');
-        List<String> words = tweetString.split(' ');
-        for (String word in words) {
-          Word tested=null;
-          word = word.trim();
-          bool test = orderedWords.any((m) {
-            bool isExists = m.word == word;
-            if(isExists){
-              tested=m;
-            }
-            return isExists;
-          });
-          if(test){
-            tested.count=tested.count+1;
-          }else{
-            orderedWords.add(new Word(word));
-          }
-        }
-      }
+  void createSaveJson() {
+    Map notesJsonMap = new Map();
+    List notesJsonList = new List();
 
-  }
-    orderedWords.sort();
-    for(Word wo in orderedWords.sublist(0,100)){
-      print(wo.word);
-      print(wo.count);
+    for (Tweet tweet in tweets) {
+      Map noteJsonMap = new Map();
+      noteJsonMap["tweet"] = tweet.tweet;
+      noteJsonMap["isReply"] = tweet.isReply;
+      noteJsonMap["isRT"] = tweet.isRT;
+      noteJsonMap["isSelected"] = tweet.isSelected;
+      notesJsonList.add(noteJsonMap);
     }
-    
+    notesJsonMap["tweets"] = notesJsonList;
+    tweetsJson = JSON.encode(notesJsonMap);
+  }
+
+  bool isLocalData() {
+    return window.localStorage[TWEETS_LIST] != null;
+  }
+
+  void saveToLocalStorage() {
+    createSaveJson();
+    window.localStorage[TWEETS_LIST] = tweetsJson;
+  }
+
+  void loadFromLoacalStorage() {
+    Map tweetsJsonMap = JSON.decode(window.localStorage[TWEETS_LIST]);
+    List tweetsJsonList = tweetsJsonMap["tweets"];
+
+    for (Map noteJsonMap in tweetsJsonList) {
+      Tweet tweet = new Tweet();
+      tweet.tweet = noteJsonMap["tweet"];
+      tweet.isSelected = noteJsonMap["isSelected"];
+      tweet.isRT = noteJsonMap["isRT"];
+      tweet.isReply = noteJsonMap["isReply"];
+      loadedTweets.add(tweet);
+    }
+    fillWithData();
   }
 
   void fillWithData() {
     listOfNonSelected.children.clear();
     listOfSelected.children.clear();
     tweets.clear();
-    if (listOfTweets != null) {
-      for (List lst in listOfTweets) {
-        if (lst != listOfTweets.first) {
-          Tweet tweet = new Tweet(lst);
-          tweets.add(tweet);
-          var LiTweet = new LIElement();
-          LiTweet.onClick.listen((event) => tweetSelect(LiTweet));
-          LiTweet.text = tweet.tweet;
-
-          if (!tweet.isRT && !tweet.isReply) {
-            listOfNonSelected.append(LiTweet);
-          }
-          if (tweet.isReply && checkReply) {
-            listOfNonSelected.append(LiTweet);
-          }
-          if (tweet.isRT && checkRetweets) {
-            listOfNonSelected.append(LiTweet);
+    if (!isLocalData()) {
+      if (listOfTweets != null) {
+        for (List lst in listOfTweets) {
+          if (lst != listOfTweets.first) {
+            Tweet tweet = new Tweet.list(lst);
+            addTweet(tweet);
           }
         }
       }
+    } else {
+      for (Tweet tweet in loadedTweets) {
+        addTweet(tweet);
+      }
     }
-    countWords();
+    saveToLocalStorage();
   }
 
-  void tweetSelect(var LiTweet) {
+  void addTweet(Tweet tweet) {
+    tweets.add(tweet);
+    var LiTweet = new LIElement();
+    LiTweet.onClick.listen((event) => tweetSelect(LiTweet, tweet));
+    LiTweet.text = tweet.tweet;
+
+    if (!tweet.isRT && !tweet.isReply) {
+      listOfNonSelected.append(LiTweet);
+    }
+    if (tweet.isReply && checkReply) {
+      listOfNonSelected.append(LiTweet);
+    }
+    if (tweet.isRT && checkRetweets) {
+      listOfNonSelected.append(LiTweet);
+    }
+    if (tweet.isSelected) {
+      listOfSelected.append(LiTweet);
+    }
+  }
+
+  void tweetSelect(var LiTweet, Tweet tweet) {
     if (listOfNonSelected.children.contains(LiTweet)) {
       listOfNonSelected.children.remove(LiTweet);
       listOfSelected.append(LiTweet);
@@ -135,37 +161,21 @@ class TwitterManipulator {
       listOfSelected.children.remove(LiTweet);
       listOfNonSelected.append(LiTweet);
     }
+    tweet.isSelected = !tweet.isSelected;
+    saveToLocalStorage();
   }
-}
-
-class Word{
-  String word;
-  int count;
-  
-  Word(String word) {
-    this.word = word;
-    count=1;
-  }
-  
-  int compareTo(Word other){
-    if(other.count>count){
-      return 1;
-    }
-    if(other.count<count){
-     return -1; 
-    }
-     return 0; 
-  }
-  
 }
 
 class Tweet {
   String tweet;
   bool isReply;
   bool isRT;
-  bool isSelected;
+  bool isSelected = false;
 
-  Tweet(List tweet) {
+  Tweet() {
+  }
+
+  Tweet.list(List tweet) {
     this.tweet = tweet[5];
     isReply = itIsReply(this.tweet);
     isRT = itIsRT(tweet);
